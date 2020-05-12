@@ -1,0 +1,5 @@
+1) convert_simtel_dl1.sh
+2) split_train_test_and_merge.sh
+3) train_random_forests.sh
+4) convert_dl1_to_dl2.sh
+5) compute_sensitivity.sh

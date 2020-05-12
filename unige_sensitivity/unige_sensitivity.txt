@@ -1,0 +1,52 @@
+
+### All the analysis scripts you need to get differential sensitivity curve from DL1 simulations:
+
+	ssh magicpic
+	cd /nfs/pic.es/user/j/jjurysek/mylst/simulations/scripts
+	(or /nfs/cta-ifae/jurysek/mylst/simulations/scripts)
+
+
+### A small DL1 MC library (point/diffuse gamma, diffuse proton):
+
+	/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg_new_split/
+
+	-> standard cfg (tailcut 6/3), half-half splited into training/testing, to get reasonable statistics in both samples
+
+
+### Spectral re-weightning, expected rates:
+
+	./proton_rate.py --output=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/proton_weights.hd5 /nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/diffuse_proton_testing.h5
+
+	./gamma_rate.py --output=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_weights.hd5 /nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_testing.h5
+
+	-> need to be calculated for testing datasets, that you use for sensitivity calculation
+	-> files with weights are saved, you will use those later for sensitivity
+
+
+### RF models training
+
+	./energy_train.py --train_file=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_training.h5 --test_file=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_testing.h5
+
+	./disp_train.py --train_file=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/diffuse_gamma_training.h5 --test_file=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_testing.h5
+
+	./gh_sep_train.py --train_proton=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/diffuse_proton_training.h5 --train_gamma=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/diffuse_gamma_training.h5 --test_proton=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/diffuse_proton_testing.h5 --test_gamma=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_testing.h5
+
+	-> train the models for all sets of cuts you want to try
+	-> my models in (for both timing/no timing options and different cuts):
+	/nfs/cta-ifae/jurysek/mc_DL1/rf_models_20191109_v0.1_v00/standard_cfg/
+
+
+### DL2 reconstruction (test point gammas and diffuse protons)
+
+	./all_reco.py --energy_model=/nfs/cta-ifae/jurysek/mc_DL1/rf_models_20191109_v0.1_v00/standard_cfg/energy_reco/energy_rf_model_300_01_2.joblib --disp_model=/nfs/cta-ifae/jurysek/mc_DL1/rf_models_20191109_v0.1_v00/standard_cfg/disp_reco/disp_rf_model_300_01_2_1deg.joblib --sep_model=/nfs/cta-ifae/jurysek/mc_DL1/rf_models_20191109_v0.1_v00/standard_cfg/gh_separation/separation_rf_model_300_01_2.joblib --input=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_testing.h5 --output=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/dl2/point_gamma_test_dl2_300_01_2_1deg.h5
+Size of dataset after selection cuts: 46481
+
+	./all_reco.py --energy_model=/nfs/cta-ifae/jurysek/mc_DL1/rf_models_20191109_v0.1_v00/standard_cfg/energy_reco/energy_rf_model_300_01_2.joblib --disp_model=/nfs/cta-ifae/jurysek/mc_DL1/rf_models_20191109_v0.1_v00/standard_cfg/disp_reco/disp_rf_model_300_01_2_1deg.joblib --sep_model=/nfs/cta-ifae/jurysek/mc_DL1/rf_models_20191109_v0.1_v00/standard_cfg/gh_separation/separation_rf_model_300_01_2.joblib --input=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/diffuse_proton_testing.h5 --output=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/dl2/diffuse_proton_test_dl2_300_01_2_1deg.h5
+Size of dataset after selection cuts: 14672
+
+
+### Sensitivity calculation
+
+	./sensitivity2.py --input_gamma=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/dl2/point_gamma_test_dl2_300_01_2_1deg.h5 --input_proton=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/dl2/diffuse_proton_test_dl2_300_01_2_1deg.h5 --weights_gamma=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/point_gamma_weights.hd5 --weights_proton=/nfs/cta-ifae/jurysek/mc_DL1/20190415/half-half/20191109_v0.1_v00/standard_cfg/proton_weights.hd5 
+
+
